@@ -15,6 +15,12 @@ Create or update the dashboard admin from `.env`:
 npm run admin:create
 ```
 
+Reset operational data while keeping users and products:
+
+```bash
+npm run data:reset
+```
+
 Health checks:
 
 ```bash

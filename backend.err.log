@@ -1935,3 +1935,173 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-ypx2wjq-shard-00-00.fflsjqd.
     }
   }
 }
+MongoServerSelectionError: connection <monitor> to 159.41.188.67:27017 timed out
+    at Topology.selectServer (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\sdam\topology.js:327:38)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async tryOperation (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\operations\execute_operation.js:196:22)
+    at async executeOperation (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+    at async FindCursor._initialize (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\find_cursor.js:62:26)
+    at async FindCursor.cursorInit (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:632:27)
+    at async FindCursor.fetchBatch (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:666:13)
+    at async FindCursor.next (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:342:17) {
+  errorLabelSet: Set(0) {},
+  reason: TopologyDescription {
+    type: 'ReplicaSetNoPrimary',
+    servers: Map(3) {
+      'ac-ypx2wjq-shard-00-00.fflsjqd.mongodb.net:27017' => [ServerDescription],
+      'ac-ypx2wjq-shard-00-01.fflsjqd.mongodb.net:27017' => [ServerDescription],
+      'ac-ypx2wjq-shard-00-02.fflsjqd.mongodb.net:27017' => [ServerDescription]
+    },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: 'atlas-crbsjf-shard-0',
+    maxElectionId: new ObjectId('7fffffff0000000000000146'),
+    maxSetVersion: 315,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: 30
+  },
+  code: undefined,
+  [cause]: MongoNetworkTimeoutError: connection <monitor> to 159.41.188.67:27017 timed out
+      at Timeout._onTimeout (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cmap\connection.js:126:26)
+      at listOnTimeout (node:internal/timers:605:17)
+      at process.processTimers (node:internal/timers:541:7) {
+    errorLabelSet: Set(2) { 'ResetPool', 'InterruptInUseConnections' },
+    beforeHandshake: false,
+    [cause]: undefined
+  }
+}
+MongoServerSelectionError: connection <monitor> to 159.41.188.67:27017 timed out
+    at Topology.selectServer (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\sdam\topology.js:327:38)
+    at async tryOperation (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\operations\execute_operation.js:196:22)
+    at async executeOperation (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+    at async FindCursor._initialize (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\find_cursor.js:62:26)
+    at async FindCursor.cursorInit (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:632:27)
+    at async FindCursor.fetchBatch (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:666:13)
+    at async FindCursor.next (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:342:17)
+    at async [Symbol.asyncIterator] (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:250:34)
+    at async FindCursor.toArray (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:422:26)
+    at async model.Query._find (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongoose\lib\query.js:2430:14) {
+  errorLabelSet: Set(0) {},
+  reason: TopologyDescription {
+    type: 'ReplicaSetNoPrimary',
+    servers: Map(3) {
+      'ac-ypx2wjq-shard-00-00.fflsjqd.mongodb.net:27017' => [ServerDescription],
+      'ac-ypx2wjq-shard-00-01.fflsjqd.mongodb.net:27017' => [ServerDescription],
+      'ac-ypx2wjq-shard-00-02.fflsjqd.mongodb.net:27017' => [ServerDescription]
+    },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: 'atlas-crbsjf-shard-0',
+    maxElectionId: new ObjectId('7fffffff0000000000000146'),
+    maxSetVersion: 315,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: 30
+  },
+  code: undefined,
+  [cause]: MongoNetworkTimeoutError: connection <monitor> to 159.41.188.67:27017 timed out
+      at Timeout._onTimeout (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cmap\connection.js:126:26)
+      at listOnTimeout (node:internal/timers:605:17)
+      at process.processTimers (node:internal/timers:541:7) {
+    errorLabelSet: Set(2) { 'ResetPool', 'InterruptInUseConnections' },
+    beforeHandshake: false,
+    [cause]: undefined
+  }
+}
+MongoServerSelectionError: read ECONNRESET
+    at Topology.selectServer (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\sdam\topology.js:327:38)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async tryOperation (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\operations\execute_operation.js:148:18)
+    at async executeOperation (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+    at async FindCursor._initialize (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\find_cursor.js:62:26)
+    at async FindCursor.cursorInit (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:632:27)
+    at async FindCursor.fetchBatch (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:666:13)
+    at async FindCursor.next (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:342:17) {
+  errorLabelSet: Set(0) {},
+  reason: TopologyDescription {
+    type: 'ReplicaSetNoPrimary',
+    servers: Map(3) {
+      'ac-ypx2wjq-shard-00-00.fflsjqd.mongodb.net:27017' => [ServerDescription],
+      'ac-ypx2wjq-shard-00-01.fflsjqd.mongodb.net:27017' => [ServerDescription],
+      'ac-ypx2wjq-shard-00-02.fflsjqd.mongodb.net:27017' => [ServerDescription]
+    },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: 'atlas-crbsjf-shard-0',
+    maxElectionId: new ObjectId('7fffffff0000000000000146'),
+    maxSetVersion: 315,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: 30
+  },
+  code: undefined,
+  [cause]: MongoNetworkError: read ECONNRESET
+      at Connection.onSocketError (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cmap\connection.js:110:22)
+      at TLSSocket.emit (node:events:520:35)
+      at emitErrorNT (node:internal/streams/destroy:170:8)
+      at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    errorLabelSet: Set(2) { 'HandshakeError', 'ResetPool' },
+    beforeHandshake: false,
+    [cause]: Error: read ECONNRESET
+        at TLSWrap.onStreamRead (node:internal/stream_base_commons:216:20) {
+      errno: -4077,
+      code: 'ECONNRESET',
+      syscall: 'read'
+    }
+  }
+}
+MongoServerSelectionError: read ECONNRESET
+    at Topology.selectServer (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\sdam\topology.js:327:38)
+    at async tryOperation (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\operations\execute_operation.js:148:18)
+    at async executeOperation (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\operations\execute_operation.js:78:16)
+    at async FindCursor._initialize (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\find_cursor.js:62:26)
+    at async FindCursor.cursorInit (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:632:27)
+    at async FindCursor.fetchBatch (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:666:13)
+    at async FindCursor.next (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:342:17)
+    at async [Symbol.asyncIterator] (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:250:34)
+    at async FindCursor.toArray (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cursor\abstract_cursor.js:422:26)
+    at async model.Query._find (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongoose\lib\query.js:2430:14) {
+  errorLabelSet: Set(0) {},
+  reason: TopologyDescription {
+    type: 'ReplicaSetNoPrimary',
+    servers: Map(3) {
+      'ac-ypx2wjq-shard-00-00.fflsjqd.mongodb.net:27017' => [ServerDescription],
+      'ac-ypx2wjq-shard-00-01.fflsjqd.mongodb.net:27017' => [ServerDescription],
+      'ac-ypx2wjq-shard-00-02.fflsjqd.mongodb.net:27017' => [ServerDescription]
+    },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: 'atlas-crbsjf-shard-0',
+    maxElectionId: new ObjectId('7fffffff0000000000000146'),
+    maxSetVersion: 315,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: 30
+  },
+  code: undefined,
+  [cause]: MongoNetworkError: read ECONNRESET
+      at Connection.onSocketError (D:\Projects\Satkhirar Amm\Satkhirar Amm - backend\node_modules\mongodb\lib\cmap\connection.js:110:22)
+      at TLSSocket.emit (node:events:520:35)
+      at emitErrorNT (node:internal/streams/destroy:170:8)
+      at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+      at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+    errorLabelSet: Set(2) { 'HandshakeError', 'ResetPool' },
+    beforeHandshake: false,
+    [cause]: Error: read ECONNRESET
+        at TLSWrap.onStreamRead (node:internal/stream_base_commons:216:20) {
+      errno: -4077,
+      code: 'ECONNRESET',
+      syscall: 'read'
+    }
+  }
+}
