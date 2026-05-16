@@ -15,11 +15,29 @@ const allowedOrigins = (process.env.CLIENT_ORIGINS || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
+const allowVercelPreviews = process.env.ALLOW_VERCEL_PREVIEWS === "true";
+
+function isOriginAllowed(origin) {
+  if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(origin);
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+    const isVercelPreview =
+      allowVercelPreviews && protocol === "https:" && hostname.endsWith(".vercel.app");
+
+    return isLocalhost || isVercelPreview;
+  } catch {
+    return false;
+  }
+}
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
         return;
       }

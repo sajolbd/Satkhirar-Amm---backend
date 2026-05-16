@@ -5,6 +5,7 @@
   "description": "Express and MongoDB API for Satkhirar Amm website and dashboard.",
   "main": "src/app.js",
   "scripts": {
+    "admin:create": "node scripts/createAdmin.js",
     "dev": "node src/server.js",
     "start": "node src/server.js",
     "check": "node --check src/app.js && node --check src/server.js",

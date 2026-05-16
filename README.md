@@ -9,6 +9,12 @@ npm install
 npm run dev
 ```
 
+Create or update the dashboard admin from `.env`:
+
+```bash
+npm run admin:create
+```
+
 Health checks:
 
 ```bash
@@ -38,6 +44,7 @@ ADMIN_EMAIL
 ADMIN_PHONE
 ADMIN_PASSWORD
 SKIP_DATABASE_SEED
+ALLOW_VERCEL_PREVIEWS
 ```
 
 Use your deployed frontend URLs in `CLIENT_ORIGINS`, separated by commas.
