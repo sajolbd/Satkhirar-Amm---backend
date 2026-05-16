@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 let connectionPromise;
+const defaultSelectionTimeout = 30000;
 
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
@@ -19,11 +20,20 @@ async function connectDB() {
     connectionPromise = mongoose
       .connect(uri, {
         dbName: process.env.MONGODB_DB_NAME || undefined,
-        serverSelectionTimeoutMS: 10000,
+        serverSelectionTimeoutMS: Number(
+          process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS || defaultSelectionTimeout
+        ),
       })
       .catch((error) => {
         connectionPromise = undefined;
-        throw error;
+        const message = [
+          "MongoDB connection failed.",
+          "If you use MongoDB Atlas, add your current public IP to Network Access > IP Access List.",
+          "For local testing you can temporarily allow 0.0.0.0/0 in Atlas.",
+          `Original error: ${error.message}`,
+        ].join(" ");
+
+        throw new Error(message);
       });
   }
 
