@@ -6,11 +6,29 @@ const signToken = require("../utils/token");
 
 const router = express.Router();
 
+const PHONE_AUTH_EMAIL_DOMAIN = "phone.satkhirar-amm.local";
+
+function normalizePhone(phone) {
+  return String(phone || "").trim();
+}
+
+function getPhoneAuthEmail(phone) {
+  const phoneKey =
+    phone.replace(/\D/g, "") ||
+    phone.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+
+  return `${phoneKey}@${PHONE_AUTH_EMAIL_DOMAIN}`;
+}
+
+function isPhoneAuthEmail(email) {
+  return String(email || "").endsWith(`@${PHONE_AUTH_EMAIL_DOMAIN}`);
+}
+
 function publicUser(user) {
   return {
     id: user.id,
-    name: user.name,
-    email: user.email,
+    name: user.name === user.phone ? "" : user.name,
+    email: isPhoneAuthEmail(user.email) ? "" : user.email,
     phone: user.phone,
     role: user.role,
     source: user.source,
@@ -21,10 +39,12 @@ function publicUser(user) {
 
 router.post("/signup", async (req, res, next) => {
   try {
-    const { name, email, phone, password, confirmPassword } = req.body;
+    const { name, phone, password } = req.body;
+    const normalizedName = String(name || "").trim();
+    const normalizedPhone = normalizePhone(phone);
 
-    if (!name || !email || !phone || !password) {
-      return res.status(400).json({ message: "সব তথ্য পূরণ করুন।" });
+    if (!normalizedName || !normalizedPhone || !password) {
+      return res.status(400).json({ message: "নাম, মোবাইল নম্বর এবং পাসওয়ার্ড দিন।" });
     }
 
     if (password.length < 6) {
@@ -33,32 +53,28 @@ router.post("/signup", async (req, res, next) => {
         .json({ message: "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।" });
     }
 
-    if (confirmPassword && password !== confirmPassword) {
-      return res.status(400).json({ message: "পাসওয়ার্ড মিলছে না।" });
-    }
-
     const passwordHash = await bcrypt.hash(password, 10);
-    const normalizedEmail = String(email).toLowerCase().trim();
-    let user = await User.findOne({ email: normalizedEmail }).select("+passwordHash");
+    let user = await User.findOne({ phone: normalizedPhone }).select("+passwordHash");
 
     if (user?.passwordHash) {
       return res
         .status(409)
-        .json({ message: "এই ইমেইলে আগে থেকেই অ্যাকাউন্ট আছে।" });
+        .json({ message: "এই মোবাইল নম্বরে আগে থেকেই অ্যাকাউন্ট আছে।" });
     }
 
     if (user) {
-      user.name = name;
-      user.phone = phone;
+      user.name = normalizedName;
+      user.email = user.email || getPhoneAuthEmail(normalizedPhone);
+      user.phone = normalizedPhone;
       user.passwordHash = passwordHash;
       user.source = "website";
       user.status = user.status || "নতুন";
       await user.save();
     } else {
       user = await User.create({
-        name,
-        email: normalizedEmail,
-        phone,
+        name: normalizedName,
+        email: getPhoneAuthEmail(normalizedPhone),
+        phone: normalizedPhone,
         passwordHash,
         source: "website",
         status: "নতুন",
@@ -76,20 +92,21 @@ router.post("/signup", async (req, res, next) => {
 
 router.post("/signin", async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { phone, password } = req.body;
+    const normalizedPhone = normalizePhone(phone);
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "ইমেইল এবং পাসওয়ার্ড দিন।" });
+    if (!normalizedPhone || !password) {
+      return res.status(400).json({ message: "মোবাইল নম্বর এবং পাসওয়ার্ড দিন।" });
     }
 
     const user = await User.findOne({
-      email: String(email).toLowerCase().trim(),
+      phone: normalizedPhone,
     }).select("+passwordHash");
 
     if (!user?.passwordHash) {
       return res
         .status(401)
-        .json({ message: "এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।" });
+        .json({ message: "এই মোবাইল নম্বরে কোনো অ্যাকাউন্ট পাওয়া যায়নি।" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
