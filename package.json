@@ -10,6 +10,7 @@
     "products:coming-soon": "node scripts/markComingSoonProducts.js",
     "dev": "node src/server.js",
     "start": "node src/server.js",
+    "build": "npm run check",
     "check": "node --check src/app.js && node --check src/server.js && node --check api/index.js",
     "watch": "node --watch src/server.js"
   },
