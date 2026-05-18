@@ -15,7 +15,9 @@ const allowedOrigins = (process.env.CLIENT_ORIGINS || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
-const allowVercelPreviews = process.env.ALLOW_VERCEL_PREVIEWS === "true";
+const allowVercelPreviews =
+  process.env.ALLOW_VERCEL_PREVIEWS === "true" ||
+  (process.env.ALLOW_VERCEL_PREVIEWS !== "false" && process.env.VERCEL === "1");
 
 function isOriginAllowed(origin) {
   if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
@@ -48,6 +50,13 @@ app.use(
   })
 );
 app.use(express.json({ limit: "8mb" }));
+
+app.use("/api", (_req, res, next) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+  next();
+});
 
 app.get("/", (_req, res) => {
   res.json({

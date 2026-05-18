@@ -91,4 +91,18 @@ router.patch("/:id/status", async (req, res, next) => {
   }
 });
 
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const order = await Order.findOneAndDelete({ id: req.params.id });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found." });
+    }
+
+    res.json({ ok: true, order });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
