@@ -7,6 +7,7 @@ function signToken(user) {
     {
       sub: user.id,
       email: user.email,
+      phone: user.phone,
     },
     secret,
     { expiresIn: "7d" }
