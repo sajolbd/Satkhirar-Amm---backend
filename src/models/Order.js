@@ -39,11 +39,12 @@ const orderSchema = new mongoose.Schema(
       district: { type: String, default: "", trim: true },
       area: { type: String, default: "", trim: true },
       address: { type: String, default: "", trim: true },
+      courierOffice: { type: String, default: "", trim: true },
       note: { type: String, default: "", trim: true },
     },
     items: [orderItemSchema],
     payment: {
-      method: { type: String, default: "ক্যাশ অন ডেলিভারি", trim: true },
+      method: { type: String, default: "বিকাশ", trim: true },
       paymentPhone: { type: String, default: "", trim: true },
       transactionId: { type: String, default: "", trim: true },
     },

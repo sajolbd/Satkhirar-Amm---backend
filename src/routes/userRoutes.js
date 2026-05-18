@@ -5,10 +5,29 @@ const User = require("../models/User");
 
 const router = express.Router();
 
+const PHONE_AUTH_EMAIL_DOMAIN = "phone.satkhirar-amm.local";
+
+function isPhoneAuthEmail(email) {
+  return String(email || "").toLowerCase().endsWith(`@${PHONE_AUTH_EMAIL_DOMAIN}`);
+}
+
+function publicUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: isPhoneAuthEmail(user.email) ? "" : user.email,
+    phone: user.phone,
+    role: user.role,
+    source: user.source,
+    status: user.status,
+    joinedAt: user.joinedAt,
+  };
+}
+
 router.get("/", async (_req, res, next) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
-    res.json(users);
+    res.json(users.map(publicUser));
   } catch (error) {
     next(error);
   }
@@ -47,7 +66,7 @@ router.post("/", async (req, res, next) => {
       }
     );
 
-    res.status(201).json(user);
+    res.status(201).json(publicUser(user));
   } catch (error) {
     next(error);
   }
