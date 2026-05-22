@@ -23,9 +23,21 @@ async function updateProductSales(items = []) {
   );
 }
 
-router.get("/", async (_req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 });
+    const filter = {};
+    const phone = String(req.query.phone || "").trim();
+    const email = String(req.query.email || "").trim().toLowerCase();
+
+    if (phone) {
+      filter["customer.phone"] = phone;
+    }
+
+    if (email) {
+      filter["customer.email"] = email;
+    }
+
+    const orders = await Order.find(filter).sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     next(error);

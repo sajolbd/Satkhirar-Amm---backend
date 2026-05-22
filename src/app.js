@@ -10,6 +10,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const ensureDatabaseReady = require("./config/runtime");
 const orderRoutes = require("./routes/orderRoutes");
 const productRoutes = require("./routes/productRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 const userRoutes = require("./routes/userRoutes");
 
 const app = express();
@@ -51,7 +52,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "8mb" }));
+app.use(express.json({ limit: "12mb" }));
 
 app.use("/api", (_req, res, next) => {
   res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
@@ -93,6 +94,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.use((req, res) => {
