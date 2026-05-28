@@ -9,7 +9,9 @@ async function ensureDatabaseReady() {
       await connectDB();
 
       if (process.env.SKIP_DATABASE_SEED !== "true") {
-        await seedDatabase();
+        seedDatabase().catch((error) => {
+          console.error("Database seed skipped after startup:", error.message);
+        });
       }
     })().catch((error) => {
       readyPromise = undefined;

@@ -33,10 +33,25 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    purchasePrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    menuSlug: {
+      type: String,
+      default: "mango",
+      trim: true,
+    },
     discountLabel: {
       type: String,
       default: "",
       trim: true,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     image: {
       type: String,
