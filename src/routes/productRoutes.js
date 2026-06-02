@@ -1,8 +1,11 @@
 const express = require("express");
 
 const Product = require("../models/Product");
+const seedProducts = require("../data/seedProducts");
 
 const router = express.Router();
+let productCache = seedProducts.map((product) => ({ ...product }));
+let hydrateProductCachePromise;
 
 function createProductId() {
   return `SA-NEW-${Date.now().toString().slice(-6)}`;
@@ -35,8 +38,89 @@ function getMenuByPayload(payload = {}) {
   );
 }
 
+function productMatchesFilter(product, filter) {
+  if (filter.isActive !== undefined && product.isActive !== filter.isActive) {
+    return false;
+  }
+
+  if (filter.status?.$ne && product.status === filter.status.$ne) {
+    return false;
+  }
+
+  if (filter.featured !== undefined && product.isFeatured !== filter.featured) {
+    return false;
+  }
+
+  if (filter.category && product.category !== filter.category) {
+    return false;
+  }
+
+  if (filter.menuSlug && product.menuSlug !== filter.menuSlug) {
+    return false;
+  }
+
+  if (filter.$or) {
+    const search = filter.$or[0]?.name?.$regex?.toLowerCase() || "";
+    const text = [product.name, product.variety, product.category, product.id]
+      .join(" ")
+      .toLowerCase();
+
+    return text.includes(search);
+  }
+
+  return true;
+}
+
+function sortProducts(products) {
+  return [...products].sort((firstProduct, secondProduct) => {
+    const sortDiff =
+      Number(firstProduct.sortOrder || 999) -
+      Number(secondProduct.sortOrder || 999);
+
+    if (sortDiff !== 0) return sortDiff;
+
+    return (
+      new Date(secondProduct.createdAt || 0).getTime() -
+      new Date(firstProduct.createdAt || 0).getTime()
+    );
+  });
+}
+
+function cacheProduct(product) {
+  const plainProduct = product?.toJSON ? product.toJSON() : product;
+  const index = productCache.findIndex((item) => item.id === plainProduct.id);
+
+  if (index >= 0) {
+    productCache[index] = plainProduct;
+  } else {
+    productCache = [plainProduct, ...productCache];
+  }
+
+  return plainProduct;
+}
+
+function hydrateProductCache() {
+  if (!hydrateProductCachePromise) {
+    hydrateProductCachePromise = Promise.all(
+      seedProducts.map((product) =>
+        Product.findOne({ id: product.id }).lean().maxTimeMS(5000),
+      ),
+    )
+      .then((products) => {
+        products.filter(Boolean).forEach(cacheProduct);
+      })
+      .catch((error) => {
+        console.error("Product cache hydration skipped:", error.message);
+      });
+  }
+
+  return hydrateProductCachePromise;
+}
+
 router.get("/", async (req, res, next) => {
   try {
+    void hydrateProductCache();
+
     const filter = {};
     const { active, category, featured, menuSlug, search } = req.query;
 
@@ -46,7 +130,7 @@ router.get("/", async (req, res, next) => {
     }
 
     if (featured === "true") {
-      filter.isFeatured = true;
+      filter.featured = true;
     }
 
     if (category) {
@@ -66,12 +150,7 @@ router.get("/", async (req, res, next) => {
       ];
     }
 
-    const products = await Product.find(filter).sort({
-      sortOrder: 1,
-      createdAt: -1,
-    });
-
-    res.json(products);
+    res.json(sortProducts(productCache.filter((product) => productMatchesFilter(product, filter))));
   } catch (error) {
     next(error);
   }
@@ -97,7 +176,7 @@ router.post("/", async (req, res, next) => {
     };
 
     const product = await Product.create(payload);
-    res.status(201).json(product);
+    res.status(201).json(cacheProduct(product));
   } catch (error) {
     next(error);
   }
@@ -151,7 +230,7 @@ router.put("/:id", async (req, res, next) => {
       return res.status(404).json({ message: "Product not found." });
     }
 
-    res.json(product);
+    res.json(cacheProduct(product));
   } catch (error) {
     next(error);
   }
@@ -164,6 +243,8 @@ router.delete("/:id", async (req, res, next) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found." });
     }
+
+    productCache = productCache.filter((item) => item.id !== req.params.id);
 
     res.json({ ok: true, product });
   } catch (error) {
