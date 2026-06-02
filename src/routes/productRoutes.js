@@ -8,6 +8,7 @@ const router = express.Router();
 let productCache = seedProducts.map((product) => ({ ...product }));
 let hydrateProductCachePromise;
 const productQueryTimeoutMs = Number(process.env.PRODUCT_QUERY_TIMEOUT_MS || 3000);
+const productCacheLimit = Number(process.env.PRODUCT_CACHE_LIMIT || 200);
 
 function createProductId() {
   return `SA-NEW-${Date.now().toString().slice(-6)}`;
@@ -101,18 +102,20 @@ function cacheProduct(product) {
   return plainProduct;
 }
 
-function timeoutAfter(ms, message) {
-  return new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(message)), ms);
-  });
-}
-
 function hydrateProductCache() {
   if (!hydrateProductCachePromise) {
     hydrateProductCachePromise = ensureDatabaseReady()
-      .then(() => Product.find().lean().maxTimeMS(productQueryTimeoutMs))
+      .then(() =>
+        Product.find()
+          .sort({ sortOrder: 1, createdAt: -1 })
+          .limit(productCacheLimit)
+          .lean()
+          .maxTimeMS(productQueryTimeoutMs)
+      )
       .then((products) => {
-        productCache = sortProducts(products);
+        if (products.length > 0) {
+          productCache = sortProducts(products);
+        }
       })
       .catch((error) => {
         console.error("Product cache hydration skipped:", error.message);
@@ -156,14 +159,7 @@ router.get("/", async (req, res, next) => {
       ];
     }
 
-    try {
-      await Promise.race([
-        hydrateProductCache(),
-        timeoutAfter(productQueryTimeoutMs, "Product database query timed out."),
-      ]);
-    } catch (error) {
-      console.error("Serving cached products:", error.message);
-    }
+    hydrateProductCache();
 
     res.json(sortProducts(productCache.filter((product) => productMatchesFilter(product, filter))));
   } catch (error) {
