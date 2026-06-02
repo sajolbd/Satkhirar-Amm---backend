@@ -26,7 +26,7 @@ const seedProducts = [
     menuSlug: "mango",
     unit: "প্রতি ৫ কেজি বক্স",
     price: 1250,
-    discountLabel: "২০০ টাকা ডিসকাউন্ট",
+    discountLabel: "২০০ টাকা ডিসকাউন্ট ",
     image: "/images/hero/mango-slide-2.png",
     shortNote:
       "যারা একটু গভীর সুবাস আর ঐতিহ্যবাহী আমের স্বাদ খোঁজেন তাদের জন্য আদর্শ।",
