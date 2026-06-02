@@ -27,11 +27,14 @@ Before pushing to Vercel, complete these steps:
 ### Vercel Dashboard Setup
 
 1. Go to your project settings
-2. Go to "Environment Variables"
-3. Add ALL these variables for **Production**:
+2. Set Root Directory to `Satkhirar Amm - backend`
+3. Go to "Environment Variables"
+4. Add ALL these variables for **Production**:
    ```
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
    MONGODB_DB_NAME=satkhirar-amm
+   MONGODB_SERVER_SELECTION_TIMEOUT_MS=10000
+   PRODUCT_QUERY_TIMEOUT_MS=3000
    JWT_SECRET=your-32-char-secret-key
    ADMIN_EMAIL=your-email@example.com
    ADMIN_PASSWORD=strong-password

@@ -1,4 +1,7 @@
-node_modules
+node_modules/
 .env
-.vercel
+.env.*
+!.env.example
+.vercel/
 npm-debug.log*
+*.log

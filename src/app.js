@@ -102,6 +102,8 @@ app.get("/health/db", async (_req, res, next) => {
   }
 });
 
+app.use("/api/products", productRoutes);
+
 app.use(async (_req, _res, next) => {
   try {
     await ensureDatabaseReady();
@@ -113,7 +115,6 @@ app.use(async (_req, _res, next) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/dashboard", dashboardRoutes);
