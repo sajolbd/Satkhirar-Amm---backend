@@ -60,7 +60,7 @@ const seedProducts = [
     name: "ফজলি আম",
     variety: "বড় সাইজ, ভাগ করে খাওয়ার জন্য সেরা",
     category: "আম",
-    unit: "প্রতি ৫ কেজি বক্স ",
+    unit: "প্রতি ৫ কেজি বক্স",
     price: 1080,
     discountLabel: "১২০ টাকা ডিসকাউন্ট",
     image: "/images/hero/mango-slide-1.png",

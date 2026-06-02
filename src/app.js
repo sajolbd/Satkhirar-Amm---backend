@@ -23,7 +23,11 @@ const allowVercelPreviews =
   (process.env.ALLOW_VERCEL_PREVIEWS !== "false" && process.env.VERCEL === "1");
 
 function isOriginAllowed(origin) {
-  if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+  if (
+    !origin ||
+    allowedOrigins.length === 0 ||
+    allowedOrigins.includes(origin)
+  ) {
     return true;
   }
 
@@ -31,7 +35,9 @@ function isOriginAllowed(origin) {
     const { hostname, protocol } = new URL(origin);
     const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
     const isVercelPreview =
-      allowVercelPreviews && protocol === "https:" && hostname.endsWith(".vercel.app");
+      allowVercelPreviews &&
+      protocol === "https:" &&
+      hostname.endsWith(".vercel.app");
 
     return isLocalhost || isVercelPreview;
   } catch {
@@ -50,12 +56,27 @@ app.use(
       callback(new Error(`Origin not allowed by CORS: ${origin}`));
     },
     credentials: true,
-  })
+  }),
 );
 app.use(express.json({ limit: "12mb" }));
 
+// Handle JSON parsing errors
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    console.error("JSON parsing error:", err);
+    return res.status(400).json({
+      message: "Invalid JSON format in request body",
+      error: process.env.NODE_ENV === "production" ? undefined : err.message,
+    });
+  }
+  next(err);
+});
+
 app.use("/api", (_req, res, next) => {
-  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate",
+  );
   res.set("Pragma", "no-cache");
   res.set("Expires", "0");
   next();
@@ -98,10 +119,13 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.use((req, res) => {
-  res.status(404).json({ message: `Route not found: ${req.method} ${req.originalUrl}` });
+  res
+    .status(404)
+    .json({ message: `Route not found: ${req.method} ${req.originalUrl}` });
 });
 
 app.use((error, _req, res, _next) => {
+  // Duplicate key error
   if (error.code === 11000) {
     return res.status(409).json({
       message: "Duplicate data already exists.",
@@ -109,9 +133,52 @@ app.use((error, _req, res, _next) => {
     });
   }
 
-  console.error(error);
-  res.status(error.status || 500).json({
-    message: error.message || "Server error",
+  // MongoDB connection error
+  if (error.name === "MongoServerSelectionError") {
+    console.error("MongoDB Connection Error:", error.message);
+    return res.status(503).json({
+      message: "Database connection failed. Please try again.",
+      error:
+        process.env.NODE_ENV === "production"
+          ? undefined
+          : "Check MongoDB Atlas IP whitelist and network access settings.",
+    });
+  }
+
+  // Mongoose validation error
+  if (error.name === "ValidationError") {
+    const messages = Object.values(error.errors).map((err) => err.message);
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: messages,
+    });
+  }
+
+  // JWT errors
+  if (error.name === "JsonWebTokenError") {
+    return res.status(401).json({
+      message: "Invalid authentication token",
+    });
+  }
+
+  if (error.name === "TokenExpiredError") {
+    return res.status(401).json({
+      message: "Authentication token expired",
+    });
+  }
+
+  // CORS errors
+  if (error.message.includes("CORS")) {
+    return res.status(403).json({
+      message: "CORS error: Origin not allowed",
+    });
+  }
+
+  // Generic error
+  console.error("Unhandled Error:", error);
+  res.status(error.status || error.statusCode || 500).json({
+    message: error.message || "Internal Server Error",
+    error: process.env.NODE_ENV === "production" ? undefined : error.stack,
   });
 });
 

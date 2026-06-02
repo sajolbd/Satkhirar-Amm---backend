@@ -12,7 +12,9 @@
     "start": "node src/server.js",
     "build": "npm run check",
     "check": "node --check src/app.js && node --check src/server.js && node --check api/index.js",
-    "watch": "node --watch src/server.js"
+    "watch": "node --watch src/server.js",
+    "test:api": "node scripts/testAPI.js http://localhost:5000",
+    "test:vercel": "node scripts/testAPI.js"
   },
   "engines": {
     "node": "22.x"
