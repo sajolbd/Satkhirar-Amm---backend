@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 let connectionPromise;
-const defaultSelectionTimeout = 30000;
+const defaultSelectionTimeout = 10000;
 
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
