@@ -34,7 +34,8 @@ In your Vercel project dashboard, add these environment variables:
 ```
 MONGODB_URI=mongodb+srv://satkhirar-admin:<password>@<cluster-name>.mongodb.net/?retryWrites=true&w=majority
 MONGODB_DB_NAME=satkhirar-amm
-MONGODB_SERVER_SELECTION_TIMEOUT_MS=30000
+MONGODB_SERVER_SELECTION_TIMEOUT_MS=10000
+PRODUCT_QUERY_TIMEOUT_MS=3000
 JWT_SECRET=your-secret-key-min-32-chars
 CLIENT_ORIGINS=https://your-website.vercel.app,https://your-dashboard.vercel.app
 ALLOW_VERCEL_PREVIEWS=true
@@ -44,6 +45,12 @@ ADMIN_PHONE=01700000000
 ADMIN_PASSWORD=strong-password-here
 SKIP_DATABASE_SEED=false
 NODE_ENV=production
+```
+
+In Vercel, keep the project Root Directory set to:
+
+```
+Satkhirar Amm - backend
 ```
 
 ## 3. Vercel Deployment Steps

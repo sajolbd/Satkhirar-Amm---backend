@@ -102,6 +102,7 @@ app.get("/health/db", async (_req, res, next) => {
   }
 });
 
+<<<<<<< HEAD
 function canServeWithoutDatabase(req) {
   return (
     req.method === "GET" &&
@@ -115,6 +116,11 @@ app.use(async (req, _res, next) => {
     return;
   }
 
+=======
+app.use("/api/products", productRoutes);
+
+app.use(async (_req, _res, next) => {
+>>>>>>> fc0b854eb8b6c0ba784dd456eca9c797d59dfe21
   try {
     await ensureDatabaseReady();
     next();
@@ -125,7 +131,6 @@ app.use(async (req, _res, next) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/dashboard", dashboardRoutes);

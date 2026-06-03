@@ -1,13 +1,21 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
+const ensureDatabaseReady = require("../config/runtime");
 const Product = require("../models/Product");
 const seedProducts = require("../data/seedProducts");
 
 const router = express.Router();
+<<<<<<< HEAD
 const DEFAULT_PRODUCT_IMAGE = "/images/hero/mango-slide-1.png";
 const defaultQueryTimeoutMs = 8000;
 let productCache = seedProducts.map(normalizeProductForResponse);
+=======
+let productCache = seedProducts.map((product) => ({ ...product }));
+let hydrateProductCachePromise;
+const productQueryTimeoutMs = Number(process.env.PRODUCT_QUERY_TIMEOUT_MS || 3000);
+const productCacheLimit = Number(process.env.PRODUCT_CACHE_LIMIT || 200);
+>>>>>>> fc0b854eb8b6c0ba784dd456eca9c797d59dfe21
 
 function createProductId() {
   return `SA-NEW-${Date.now().toString().slice(-6)}`;
@@ -115,9 +123,34 @@ function cacheProduct(product) {
   return plainProduct;
 }
 
+<<<<<<< HEAD
 function replaceProductCache(products) {
   productCache = sortProducts(products.map(normalizeProductForResponse));
 }
+=======
+function hydrateProductCache() {
+  if (!hydrateProductCachePromise) {
+    hydrateProductCachePromise = ensureDatabaseReady()
+      .then(() =>
+        Product.find()
+          .sort({ sortOrder: 1, createdAt: -1 })
+          .limit(productCacheLimit)
+          .lean()
+          .maxTimeMS(productQueryTimeoutMs)
+      )
+      .then((products) => {
+        if (products.length > 0) {
+          productCache = sortProducts(products);
+        }
+      })
+      .catch((error) => {
+        console.error("Product cache hydration skipped:", error.message);
+      })
+      .finally(() => {
+        hydrateProductCachePromise = undefined;
+      });
+  }
+>>>>>>> fc0b854eb8b6c0ba784dd456eca9c797d59dfe21
 
 function getQueryTimeoutMs() {
   return Number(process.env.MONGODB_QUERY_TIMEOUT_MS || defaultQueryTimeoutMs);
@@ -225,6 +258,7 @@ router.get("/", async (req, res, next) => {
       ];
     }
 
+<<<<<<< HEAD
     if (!isDatabaseConnected()) {
       return res.json(getCachedProducts(filter));
     }
@@ -243,6 +277,11 @@ router.get("/", async (req, res, next) => {
       console.error("Product query fell back to cache:", error.message);
       res.json(getCachedProducts(filter));
     }
+=======
+    hydrateProductCache();
+
+    res.json(sortProducts(productCache.filter((product) => productMatchesFilter(product, filter))));
+>>>>>>> fc0b854eb8b6c0ba784dd456eca9c797d59dfe21
   } catch (error) {
     next(error);
   }
@@ -250,6 +289,8 @@ router.get("/", async (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
+    await ensureDatabaseReady();
+
     const selectedMenu = getMenuByPayload(req.body);
     const payload = {
       ...req.body,
@@ -276,6 +317,8 @@ router.post("/", async (req, res, next) => {
 
 router.put("/:id", async (req, res, next) => {
   try {
+    await ensureDatabaseReady();
+
     const update = { ...req.body };
     const selectedMenu = getMenuByPayload(update);
 
@@ -330,6 +373,8 @@ router.put("/:id", async (req, res, next) => {
 
 router.delete("/:id", async (req, res, next) => {
   try {
+    await ensureDatabaseReady();
+
     const product = await Product.findOneAndDelete({ id: req.params.id });
 
     if (!product) {
