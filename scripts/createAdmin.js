@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("../src/config/env");
 
 const bcrypt = require("bcryptjs");
 

@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("../src/config/env");
 
 const connectDB = require("../src/config/db");
 const Product = require("../src/models/Product");

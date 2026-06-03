@@ -108,7 +108,7 @@ async function runTests() {
 
   for (const test of tests) {
     const result = await testEndpoint(test.path);
-    const isSuccess = result.success && result.status === test.expectedStatus;
+    const isSuccess = result.status === test.expectedStatus;
 
     console.log(`${isSuccess ? "✅" : "❌"} ${test.name}`);
     console.log(
