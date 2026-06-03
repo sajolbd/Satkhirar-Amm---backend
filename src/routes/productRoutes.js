@@ -7,6 +7,7 @@ const seedProducts = require("../data/seedProducts");
 
 const router = express.Router();
 const DEFAULT_PRODUCT_IMAGE = "/images/hero/mango-slide-1.png";
+const defaultConnectionTimeoutMs = 5000;
 const defaultQueryTimeoutMs = 8000;
 let productCache = seedProducts.map(normalizeProductForResponse);
 
@@ -120,8 +121,21 @@ function replaceProductCache(products) {
   productCache = sortProducts(products.map(normalizeProductForResponse));
 }
 
+function getEnvTimeoutMs(name, fallbackMs) {
+  const timeoutMs = Number(process.env[name]);
+
+  return Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : fallbackMs;
+}
+
+function getConnectionTimeoutMs() {
+  return getEnvTimeoutMs(
+    "PRODUCT_DATABASE_READY_TIMEOUT_MS",
+    defaultConnectionTimeoutMs,
+  );
+}
+
 function getQueryTimeoutMs() {
-  return Number(process.env.MONGODB_QUERY_TIMEOUT_MS || defaultQueryTimeoutMs);
+  return getEnvTimeoutMs("MONGODB_QUERY_TIMEOUT_MS", defaultQueryTimeoutMs);
 }
 
 function isDatabaseConnected() {
@@ -145,6 +159,23 @@ function withTimeout(promise, timeoutMs) {
       );
     }),
   ]);
+}
+
+async function ensureProductsDatabaseConnection() {
+  if (isDatabaseConnected()) {
+    return true;
+  }
+
+  try {
+    await withTimeout(ensureDatabaseReady(), getConnectionTimeoutMs());
+    return isDatabaseConnected();
+  } catch (error) {
+    console.error(
+      "Product API using cached products while database is unavailable:",
+      error.message,
+    );
+    return false;
+  }
 }
 
 function fetchProducts(filter) {
@@ -226,7 +257,9 @@ router.get("/", async (req, res, next) => {
       ];
     }
 
-    if (!isDatabaseConnected()) {
+    const databaseReady = await ensureProductsDatabaseConnection();
+
+    if (!databaseReady) {
       return res.json(getCachedProducts(filter));
     }
 

@@ -17,7 +17,7 @@
     "test:vercel": "node scripts/testAPI.js"
   },
   "engines": {
-    "node": ">=22 <25"
+    "node": ">=20.18 <25"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
