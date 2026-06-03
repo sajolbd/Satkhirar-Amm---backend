@@ -7,15 +7,14 @@ const ensureDatabaseReady = require("./config/runtime");
 
 const port = process.env.PORT || 5000;
 
-async function bootstrap() {
-  await ensureDatabaseReady();
+function bootstrap() {
+  ensureDatabaseReady().catch((error) => {
+    console.error("Database initialization failed:", error.message);
+  });
 
   app.listen(port, () => {
     console.log(`Satkhirar Amm API listening on http://localhost:${port}`);
   });
 }
 
-bootstrap().catch((error) => {
-  console.error("Failed to start API", error);
-  process.exit(1);
-});
+bootstrap();

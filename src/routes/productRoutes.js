@@ -1,11 +1,13 @@
 const express = require("express");
+const mongoose = require("mongoose");
 
 const Product = require("../models/Product");
 const seedProducts = require("../data/seedProducts");
 
 const router = express.Router();
-let productCache = seedProducts.map((product) => ({ ...product }));
-let hydrateProductCachePromise;
+const DEFAULT_PRODUCT_IMAGE = "/images/hero/mango-slide-1.png";
+const defaultQueryTimeoutMs = 8000;
+let productCache = seedProducts.map(normalizeProductForResponse);
 
 function createProductId() {
   return `SA-NEW-${Date.now().toString().slice(-6)}`;
@@ -47,7 +49,7 @@ function productMatchesFilter(product, filter) {
     return false;
   }
 
-  if (filter.featured !== undefined && product.isFeatured !== filter.featured) {
+  if (filter.isFeatured !== undefined && product.isFeatured !== filter.isFeatured) {
     return false;
   }
 
@@ -60,7 +62,7 @@ function productMatchesFilter(product, filter) {
   }
 
   if (filter.$or) {
-    const search = filter.$or[0]?.name?.$regex?.toLowerCase() || "";
+    const search = String(filter.$or[0]?.name?.$regex || "").toLowerCase();
     const text = [product.name, product.variety, product.category, product.id]
       .join(" ")
       .toLowerCase();
@@ -86,8 +88,22 @@ function sortProducts(products) {
   });
 }
 
+function normalizeProductForResponse(product) {
+  const plainProduct = product?.toJSON ? product.toJSON() : { ...product };
+  const image = String(plainProduct.image || "");
+
+  return {
+    ...plainProduct,
+    image: image && !image.startsWith("data:") ? image : DEFAULT_PRODUCT_IMAGE,
+  };
+}
+
+function serializeProduct(product) {
+  return normalizeProductForResponse(product);
+}
+
 function cacheProduct(product) {
-  const plainProduct = product?.toJSON ? product.toJSON() : product;
+  const plainProduct = normalizeProductForResponse(product);
   const index = productCache.findIndex((item) => item.id === plainProduct.id);
 
   if (index >= 0) {
@@ -99,28 +115,87 @@ function cacheProduct(product) {
   return plainProduct;
 }
 
-function hydrateProductCache() {
-  if (!hydrateProductCachePromise) {
-    hydrateProductCachePromise = Promise.all(
-      seedProducts.map((product) =>
-        Product.findOne({ id: product.id }).lean().maxTimeMS(5000),
-      ),
-    )
-      .then((products) => {
-        products.filter(Boolean).forEach(cacheProduct);
-      })
-      .catch((error) => {
-        console.error("Product cache hydration skipped:", error.message);
-      });
-  }
+function replaceProductCache(products) {
+  productCache = sortProducts(products.map(normalizeProductForResponse));
+}
 
-  return hydrateProductCachePromise;
+function getQueryTimeoutMs() {
+  return Number(process.env.MONGODB_QUERY_TIMEOUT_MS || defaultQueryTimeoutMs);
+}
+
+function isDatabaseConnected() {
+  return mongoose.connection.readyState === 1;
+}
+
+function getCachedProducts(filter) {
+  return sortProducts(productCache.filter((product) => productMatchesFilter(product, filter)));
+}
+
+function withTimeout(promise, timeoutMs) {
+  let timeout;
+  const pendingPromise = Promise.resolve(promise);
+
+  return Promise.race([
+    pendingPromise.finally(() => clearTimeout(timeout)),
+    new Promise((_, reject) => {
+      timeout = setTimeout(
+        () => reject(new Error(`Product query exceeded ${timeoutMs}ms.`)),
+        timeoutMs,
+      );
+    }),
+  ]);
+}
+
+function fetchProducts(filter) {
+  return Product.aggregate([
+    { $match: filter },
+    {
+      $addFields: {
+        safeImage: {
+          $cond: [
+            {
+              $regexMatch: {
+                input: { $ifNull: ["$image", ""] },
+                regex: /^data:/,
+              },
+            },
+            DEFAULT_PRODUCT_IMAGE,
+            { $ifNull: ["$image", DEFAULT_PRODUCT_IMAGE] },
+          ],
+        },
+      },
+    },
+    {
+      $project: {
+        _id: { $toString: "$_id" },
+        id: 1,
+        name: 1,
+        variety: 1,
+        category: 1,
+        unit: 1,
+        price: 1,
+        purchasePrice: 1,
+        menuSlug: 1,
+        discountLabel: 1,
+        discountAmount: 1,
+        image: "$safeImage",
+        shortNote: 1,
+        stock: 1,
+        sales: 1,
+        status: 1,
+        color: 1,
+        isActive: 1,
+        isFeatured: 1,
+        sortOrder: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    },
+  ]).option({ maxTimeMS: getQueryTimeoutMs() });
 }
 
 router.get("/", async (req, res, next) => {
   try {
-    void hydrateProductCache();
-
     const filter = {};
     const { active, category, featured, menuSlug, search } = req.query;
 
@@ -130,7 +205,7 @@ router.get("/", async (req, res, next) => {
     }
 
     if (featured === "true") {
-      filter.featured = true;
+      filter.isFeatured = true;
     }
 
     if (category) {
@@ -150,7 +225,24 @@ router.get("/", async (req, res, next) => {
       ];
     }
 
-    res.json(sortProducts(productCache.filter((product) => productMatchesFilter(product, filter))));
+    if (!isDatabaseConnected()) {
+      return res.json(getCachedProducts(filter));
+    }
+
+    try {
+      const products = await withTimeout(fetchProducts(filter), getQueryTimeoutMs());
+
+      if (Object.keys(filter).length === 0) {
+        replaceProductCache(products);
+      } else {
+        products.forEach(cacheProduct);
+      }
+
+      res.json(sortProducts(products.map(normalizeProductForResponse)));
+    } catch (error) {
+      console.error("Product query fell back to cache:", error.message);
+      res.json(getCachedProducts(filter));
+    }
   } catch (error) {
     next(error);
   }

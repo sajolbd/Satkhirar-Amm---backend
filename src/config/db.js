@@ -1,7 +1,17 @@
 const mongoose = require("mongoose");
 
 let connectionPromise;
-const defaultSelectionTimeout = 30000;
+const defaultSelectionTimeout = 5000;
+
+function getServerSelectionTimeoutMs() {
+  const configuredTimeout = Number(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS);
+
+  if (!Number.isFinite(configuredTimeout) || configuredTimeout <= 0) {
+    return defaultSelectionTimeout;
+  }
+
+  return Math.min(configuredTimeout, defaultSelectionTimeout);
+}
 
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
@@ -20,20 +30,20 @@ async function connectDB() {
     connectionPromise = mongoose
       .connect(uri, {
         dbName: process.env.MONGODB_DB_NAME || undefined,
-        serverSelectionTimeoutMS: Number(
-          process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS || defaultSelectionTimeout
-        ),
+        serverSelectionTimeoutMS: getServerSelectionTimeoutMs(),
       })
       .catch((error) => {
         connectionPromise = undefined;
         const message = [
           "MongoDB connection failed.",
-          "If you use MongoDB Atlas, add your current public IP to Network Access > IP Access List.",
-          "For local testing you can temporarily allow 0.0.0.0/0 in Atlas.",
+          "If this is deployed on Vercel, MongoDB Atlas Network Access must allow Vercel's serverless IPs; for most hobby deployments use 0.0.0.0/0.",
+          "For local testing, add your current public IP to Atlas Network Access.",
           `Original error: ${error.message}`,
         ].join(" ");
 
-        throw new Error(message);
+        const connectionError = new Error(message);
+        connectionError.statusCode = 503;
+        throw connectionError;
       });
   }
 

@@ -102,7 +102,19 @@ app.get("/health/db", async (_req, res, next) => {
   }
 });
 
-app.use(async (_req, _res, next) => {
+function canServeWithoutDatabase(req) {
+  return (
+    req.method === "GET" &&
+    (req.path === "/api/products" || req.path === "/api/products/")
+  );
+}
+
+app.use(async (req, _res, next) => {
+  if (canServeWithoutDatabase(req)) {
+    next();
+    return;
+  }
+
   try {
     await ensureDatabaseReady();
     next();
@@ -130,6 +142,17 @@ app.use((error, _req, res, _next) => {
     return res.status(409).json({
       message: "Duplicate data already exists.",
       fields: error.keyValue,
+    });
+  }
+
+  if (
+    error.statusCode === 503 &&
+    error.message?.startsWith("MongoDB connection failed.")
+  ) {
+    console.error("MongoDB Connection Error:", error.message);
+    return res.status(503).json({
+      message: "Database connection failed. Please try again.",
+      error: process.env.NODE_ENV === "production" ? undefined : error.message,
     });
   }
 
