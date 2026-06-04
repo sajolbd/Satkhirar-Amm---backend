@@ -4,6 +4,49 @@ let connectionPromise;
 const defaultTimeoutMs = 5000;
 const mongoUriKeys = ["MONGODB_URI", "MONGO_URI", "DATABASE_URL"];
 
+function encodeUriPart(value) {
+  try {
+    return encodeURIComponent(decodeURIComponent(value));
+  } catch {
+    return encodeURIComponent(value);
+  }
+}
+
+function encodeMongoUserInfo(uri) {
+  const schemeMatch = uri.match(/^mongodb(?:\+srv)?:\/\//i);
+
+  if (!schemeMatch) {
+    return uri;
+  }
+
+  const userInfoStart = schemeMatch[0].length;
+  const atIndex = uri.indexOf("@", userInfoStart);
+
+  if (atIndex === -1) {
+    return uri;
+  }
+
+  const userInfo = uri.slice(userInfoStart, atIndex);
+  const separatorIndex = userInfo.indexOf(":");
+
+  if (separatorIndex === -1) {
+    return `${uri.slice(0, userInfoStart)}${encodeUriPart(userInfo)}${uri.slice(
+      atIndex,
+    )}`;
+  }
+
+  const username = userInfo.slice(0, separatorIndex);
+  const password = userInfo.slice(separatorIndex + 1);
+
+  return [
+    uri.slice(0, userInfoStart),
+    encodeUriPart(username),
+    ":",
+    encodeUriPart(password),
+    uri.slice(atIndex),
+  ].join("");
+}
+
 function normalizeMongoUri(value) {
   let uri = String(value || "").trim().replace(/^['"]|['"]$/g, "");
   const assignmentMatch = uri.match(
@@ -14,7 +57,7 @@ function normalizeMongoUri(value) {
     uri = assignmentMatch[1].trim().replace(/^['"]|['"]$/g, "");
   }
 
-  return uri.replace(/[?&]+$/, "");
+  return encodeMongoUserInfo(uri).replace(/[?&]+$/, "");
 }
 
 function getMongoDiagnostics(key, uri) {
