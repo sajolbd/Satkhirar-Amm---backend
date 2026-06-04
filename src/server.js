@@ -1,14 +1,15 @@
 require("./config/env");
 
 const app = require("./app");
+const connectDB = require("./config/db");
 const ensureDatabaseReady = require("./config/runtime");
 
 const port = process.env.PORT || 5000;
 
 function bootstrap() {
-  if (!process.env.MONGODB_URI) {
+  if (!connectDB.getMongoUriConfig().uri) {
     console.warn(
-      "Database initialization skipped: MONGODB_URI is missing. Add it to Satkhirar-Amm---backend/.env when you want live database data.",
+      "Database initialization skipped: MONGODB_URI / MONGO_URI / DATABASE_URL is missing. Add one to Satkhirar-Amm---backend/.env when you want live database data.",
     );
   } else {
     ensureDatabaseReady().catch((error) => {

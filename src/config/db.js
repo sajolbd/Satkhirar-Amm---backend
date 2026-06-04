@@ -1,23 +1,40 @@
 const mongoose = require("mongoose");
 
 let connectionPromise;
-const defaultSelectionTimeout = 5000;
+const defaultTimeoutMs = 5000;
+const mongoUriKeys = ["MONGODB_URI", "MONGO_URI", "DATABASE_URL"];
 
-function getServerSelectionTimeoutMs() {
-  const configuredTimeout = Number(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS);
+function getBoundedTimeoutMs(key, fallback = defaultTimeoutMs) {
+  const configuredTimeout = Number(process.env[key]);
 
   if (!Number.isFinite(configuredTimeout) || configuredTimeout <= 0) {
-    return defaultSelectionTimeout;
+    return fallback;
   }
 
-  return Math.min(configuredTimeout, defaultSelectionTimeout);
+  return Math.min(configuredTimeout, defaultTimeoutMs);
+}
+
+function getMongoUriConfig() {
+  for (const key of mongoUriKeys) {
+    const uri = process.env[key]?.trim();
+
+    if (uri) {
+      return { key, uri };
+    }
+  }
+
+  return { key: null, uri: "" };
 }
 
 async function connectDB() {
-  const uri = process.env.MONGODB_URI;
+  const { key, uri } = getMongoUriConfig();
 
   if (!uri) {
-    throw new Error("MONGODB_URI is missing. Add it to your backend .env file.");
+    throw new Error(
+      `${mongoUriKeys.join(
+        " / ",
+      )} is missing. Add your MongoDB Atlas connection string to the backend environment variables.`,
+    );
   }
 
   if (mongoose.connection.readyState === 1) {
@@ -27,17 +44,21 @@ async function connectDB() {
   mongoose.set("strictQuery", true);
 
   if (!connectionPromise) {
+    const timeoutMs = getBoundedTimeoutMs("MONGODB_SERVER_SELECTION_TIMEOUT_MS");
+
     connectionPromise = mongoose
       .connect(uri, {
         dbName: process.env.MONGODB_DB_NAME || undefined,
-        serverSelectionTimeoutMS: getServerSelectionTimeoutMs(),
+        serverSelectionTimeoutMS: timeoutMs,
+        connectTimeoutMS: getBoundedTimeoutMs("MONGODB_CONNECT_TIMEOUT_MS"),
       })
       .catch((error) => {
         connectionPromise = undefined;
         const message = [
           "MongoDB connection failed.",
+          `URI env key: ${key}.`,
           "If this is deployed on Vercel, MongoDB Atlas Network Access must allow Vercel's serverless IPs; for most hobby deployments use 0.0.0.0/0.",
-          "For local testing, add your current public IP to Atlas Network Access.",
+          "Also confirm the same MongoDB URI is added to Vercel Production environment variables, then redeploy.",
           `Original error: ${error.message}`,
         ].join(" ");
 
@@ -52,5 +73,7 @@ async function connectDB() {
   console.log(`MongoDB connected: ${mongoose.connection.name}`);
   return mongoose.connection;
 }
+
+connectDB.getMongoUriConfig = getMongoUriConfig;
 
 module.exports = connectDB;
