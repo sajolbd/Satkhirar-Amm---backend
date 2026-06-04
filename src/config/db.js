@@ -4,6 +4,37 @@ let connectionPromise;
 const defaultTimeoutMs = 5000;
 const mongoUriKeys = ["MONGODB_URI", "MONGO_URI", "DATABASE_URL"];
 
+function normalizeMongoUri(value) {
+  let uri = String(value || "").trim().replace(/^['"]|['"]$/g, "");
+  const assignmentMatch = uri.match(
+    /^(?:MONGODB_URI|MONGO_URI|DATABASE_URL)\s*=\s*(.+)$/i,
+  );
+
+  if (assignmentMatch) {
+    uri = assignmentMatch[1].trim().replace(/^['"]|['"]$/g, "");
+  }
+
+  return uri.replace(/[?&]+$/, "");
+}
+
+function getMongoDiagnostics(key, uri) {
+  if (!uri) {
+    return { uriEnvKey: key, uriHost: null, uriDatabase: null };
+  }
+
+  try {
+    const parsedUrl = new URL(uri);
+
+    return {
+      uriEnvKey: key,
+      uriHost: parsedUrl.host,
+      uriDatabase: parsedUrl.pathname.replace(/^\//, "") || null,
+    };
+  } catch {
+    return { uriEnvKey: key, uriHost: "invalid-uri", uriDatabase: null };
+  }
+}
+
 function getBoundedTimeoutMs(key, fallback = defaultTimeoutMs) {
   const configuredTimeout = Number(process.env[key]);
 
@@ -16,7 +47,7 @@ function getBoundedTimeoutMs(key, fallback = defaultTimeoutMs) {
 
 function getMongoUriConfig() {
   for (const key of mongoUriKeys) {
-    const uri = process.env[key]?.trim();
+    const uri = normalizeMongoUri(process.env[key]);
 
     if (uri) {
       return { key, uri };
@@ -54,9 +85,11 @@ async function connectDB() {
       })
       .catch((error) => {
         connectionPromise = undefined;
+        const diagnostics = getMongoDiagnostics(key, uri);
         const message = [
           "MongoDB connection failed.",
           `URI env key: ${key}.`,
+          `URI host: ${diagnostics.uriHost || "missing"}.`,
           "If this is deployed on Vercel, MongoDB Atlas Network Access must allow Vercel's serverless IPs; for most hobby deployments use 0.0.0.0/0.",
           "Also confirm the same MongoDB URI is added to Vercel Production environment variables, then redeploy.",
           `Original error: ${error.message}`,
@@ -64,6 +97,7 @@ async function connectDB() {
 
         const connectionError = new Error(message);
         connectionError.statusCode = 503;
+        connectionError.diagnostics = diagnostics;
         throw connectionError;
       });
   }

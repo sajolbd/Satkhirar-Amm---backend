@@ -150,6 +150,8 @@ app.use((error, _req, res, _next) => {
     console.error("MongoDB Connection Error:", error.message);
     return res.status(503).json({
       message: "Database connection failed. Please try again.",
+      hint: "Check MongoDB Atlas Network Access and the Vercel Production MONGODB_URI value, then redeploy.",
+      diagnostics: error.diagnostics,
       error: process.env.NODE_ENV === "production" ? undefined : error.message,
     });
   }
@@ -159,6 +161,7 @@ app.use((error, _req, res, _next) => {
     console.error("MongoDB Connection Error:", error.message);
     return res.status(503).json({
       message: "Database connection failed. Please try again.",
+      hint: "Check MongoDB Atlas Network Access and the Vercel Production MONGODB_URI value, then redeploy.",
       error:
         process.env.NODE_ENV === "production"
           ? undefined
