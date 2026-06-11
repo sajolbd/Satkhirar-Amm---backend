@@ -22,6 +22,7 @@ function getDiscountLabel(amount, label = "") {
 
 const productMenus = [
   { slug: "mango", category: "আম", aliases: ["আম"] },
+  { slug: "ghi", category: "ঘি", aliases: ["ঘি"] },
   { slug: "gur", category: "গুড়", aliases: ["গুড়", "গুড়"] },
   { slug: "plants", category: "চারা", aliases: ["চারা"] },
   { slug: "pickle", category: "আচার", aliases: ["আচার"] },
